@@ -1,20 +1,25 @@
-{
-  "id":"hackesofice.pdfViewer",
-  "name":"PDF-Viewer",
-  "main":"main.js",
-  "version":"1.0.0",
-  "readme":"readme.md",
-  "icon":"icon.png",
-  "files":[],
-  "minVersionCode":290,
-  "license":"",
-  "changelogs":"changelogs.md",
-  "keywords":["hackesofice", "PDF"],
-  "price":0,
-  "repository":"https://github.com/hackesofice/PDF-Viewer.git",
-  "author":{
-    "name":"HACKESOFICE",
-    "email":"hackesofice@gmail.com",
-    "github":"hackesofice"
-  }
-}
+"use strict";
+(() => {
+
+
+    class pdfViewer {
+
+        async init() {}
+        async destroy() {}
+    }
+
+
+    if (window.acode) {
+        let i = new pdfViewer();
+        acode.setPluginInit(e.id, async (n, o, {
+            cacheFileUrl: s, cacheFile: d
+        }) => {
+            n.endsWith("/") || (n += "/");
+            i.baseUrl = n;
+            await i.init(o, d, s);
+        });
+        acode.setPluginUnmount(e.id, () => {
+            i.destroy();
+        });
+    }
+})();
