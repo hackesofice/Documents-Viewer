@@ -1,0 +1,20 @@
+{
+  "id":"hackesofice.pdfViewer",
+  "name":"PDF-Viewer",
+  "main":"main.js",
+  "version":"1.0.0",
+  "readme":"readme.md",
+  "icon":"icon.png",
+  "files":[],
+  "minVersionCode":290,
+  "license":"",
+  "changelogs":"changelogs.md",
+  "keywords":["hackesofice", "PDF"],
+  "price":0,
+  "repository":"https://github.com/hackesofice/PDF-Viewer.git",
+  "author":{
+    "name":"HACKESOFICE",
+    "email":"hackesofice@gmail.com",
+    "github":"hackesofice"
+  }
+}
