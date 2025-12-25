@@ -82,6 +82,19 @@
                 return false
             }
         }
+        
+        static async addCSVLibrary(){
+            try{
+                const library = document.createElement('script');
+                library.src = "https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"
+                document.head.appendChild(library);
+                await new Promise((resolve, reject)=>{library.onload = resolve; library.onerror = reject});
+                return true
+            }catch(err){
+                console.log('err happend', err)
+                return false
+            }
+        }
     }
 
     class PDF {
@@ -341,12 +354,83 @@
         constructor(name, uri) {
             this.currentEditorFilePath = uri;
             this.currentOpendFileName = name;
+            this.libraryLoaded = false
+            this.tab_container = null
+            this.tab = null
+            
         }
+        
 
-        handle() {
-            const library = document.createElement('script');
-            library.src = '';
+        async handle() {
+            const container = GeneralFunctions.createMainContainer();
+            container.style.cssText = 'margin:5px;'
+            const tab = GeneralFunctions.CreateNewTab(this.currentOpendFileName, this.currentEditorFilePath, container)
+            const libraryStatus = await GeneralFunctions.addXLSorCSVLibrary()
+            
+            this.libraryLoaded = libraryStatus
+            this.tab = tab;
+            this.tab_container = container;
+            await this.#prepareTab()
+            // this.#addStyles()
         }
+        
+        async #prepareTab(){
+            const fileData = await GeneralFunctions.getFileData(this.currentEditorFilePath);
+            
+            const workBook = window.XLSX.read(fileData, {type: 'binary'})
+            console.log('this is data')
+            const sheet = workBook.Sheets[workBook.SheetNames[0]]
+            const html = window.XLSX.utils.sheet_to_html(sheet)
+            
+            // console.log(typeof(html))
+            // console.log(fileData, workBook, sheet, html)
+            this.tab_container.innerHTML = html
+            this.#addStyles()
+        }
+        
+        #addStyles(){
+            const styles = document.createElement('style')
+            // const table = this.tab_container.querySelector('table')
+            this.tab_container.appendChild(styles)
+            // table.style.cssText = `background-color:red; border: 1px solid black;`
+            
+            styles.innerText = `
+                table {
+                  border-collapse: collapse;
+                  border-spacing: 0;
+                  font-family: Calibri, Arial, sans-serif;
+                  font-size: 14px;
+                }
+                
+                table td, table th {
+                  border: 1px solid #d4d4d4; /* Excel-like gridline */
+                  padding: 4px 8px;
+                  min-width: 80px;
+                  height: 22px;
+                  vertical-align: middle;
+                  text-align: left;
+                  background-color: transform;
+                }
+                
+                table th {
+                  background-color: #f3f3f3;
+                  font-weight: 600;
+                  text-align: center;
+                }
+                
+                /* Hover like Excel cell focus */
+                table td:hover {
+                  background-color: gray;
+                }
+                
+                /* Active / selected cell (optional class) */
+                table td.selected {
+                  outline: 2px solid #4a90e2;
+                  outline-offset: -2px;
+                }
+                `;
+        }
+        
     }
 
     // handle the Markdown files
@@ -369,7 +453,7 @@
             // get the pdfjs later ill include it directly in project
             acode.registerFileHandler(e.id, {
                 //extensions: ['pdf', 'docx', 'csv', 'xls', 'xlsx', 'md'],
-                extensions: ['pdf', 'docx'],
+                extensions: ['pdf', 'docx', 'xls', 'xlsx'],
                 async handleFile({ name, uri, fs, options }) {
                     // Handler implementation
                     if (name.toLowerCase().endsWith('pdf')) {
