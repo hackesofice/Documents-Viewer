@@ -32,7 +32,7 @@
         }
 
         static createMainContainer() {
-            return GeneralFunctions.createElement('main_container', 'div', { height: '100vh !important', width: '100vw', backgroundColor: 'green', display: 'flex', flexWrap: 'wrap', gap: '10px', justifyContent: 'center' })
+            return GeneralFunctions.createElement('main_container', 'div', { height: '100vh !important', width: '100vw', backgroundColor: 'transperent', display: 'flex', flexWrap: 'wrap', gap: '10px', justifyContent: 'center' })
         }
 
 
@@ -40,6 +40,7 @@
         static async getFileData(path) {
             const fsObj = fs(path)
             const fileData = await fsObj.readFile();
+            console.log(typeof(fileData))
             return fileData
         }
 
@@ -53,6 +54,34 @@
             }
             return
         }
+        
+        static async addDOCXLibrary(){
+            try{
+                const library = document.createElement('script');
+                // library.src = "https://esm.sh/docx-preview";
+                library.src = "https://unpkg.com/docx-preview/dist/docx-preview.min.js"
+                document.head.appendChild(library);
+                await new Promise((resolve, reject)=>{library.onload = resolve; library.onerror = reject});
+                return true
+            }catch(err){
+                console.log('err happend', err)
+                return false
+            }
+        }
+        
+        static async addXLSorCSVLibrary(){
+            try{
+                const library = document.createElement('script');
+                // library.src = "https://esm.sh/xlsx@0.18.5";
+                library.src = "https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"
+                document.head.appendChild(library);
+                await new Promise((resolve, reject)=>{library.onload = resolve; library.onerror = reject});
+                return true
+            }catch(err){
+                console.log('err happend', err)
+                return false
+            }
+        }
     }
 
     class PDF {
@@ -65,8 +94,8 @@
         }
 
         handle() {
-            console.log(`this is the file name ${this.currentOpendFileName}`)
-            console.log(`this is file uri ${this.currentEditorFilePath}`)
+            // console.log(`this is the file name ${this.currentOpendFileName}`)
+            // console.log(`this is file uri ${this.currentEditorFilePath}`)
 
             // const tab_data = GeneralFunctions.CreateNewTab(this.currentOpendFileName, this.currentEditorFilePath)
             // const tab = tab_data[0];
@@ -117,10 +146,10 @@
 
             /// i have to imolemnt the lazy loading hear
 
-            console.log("Type:", typeof fileData);
-            console.log("Instance:", fileData.constructor.name);
-            console.log("Length:", fileData.length || fileData.byteLength);
-            console.log("PDF loaded, pages:", pdf.numPages);
+            // console.log("Type:", typeof fileData);
+            // console.log("Instance:", fileData.constructor.name);
+            // console.log("Length:", fileData.length || fileData.byteLength);
+            // console.log("PDF loaded, pages:", pdf.numPages);
         }
 
         #createFakePages(count) {
@@ -129,7 +158,7 @@
                     marginTop: '10px',
                     height: '60vh',
                     width: '85vw',
-                    backgroundColor: 'red'
+                    backgroundColor: 'transperent'
                 });
                 this.#setObserver().observe(ele); // setted up observeing
                 this.tab_container.appendChild(ele)
@@ -141,9 +170,14 @@
                 entries.forEach(entry => {
                     if (entry.isIntersecting) {
                         const pageElem = entry.target;
-                        console.log(pageElem, typeof pageElem, pageElem.id)
+                        // console.log(pageElem, typeof pageElem, pageElem.id)
                         this.#loadRealPdfPage(pageElem);
-                        observer.unobserve(pageElem); //after loading stiop
+                       // observer.unobserve(pageElem); //after loading stiop
+                    }else{
+                        //now il hamdle ghe cleanup hear
+                        const pageElem = entry.target;
+                        // console.log(typeof(pageElem))
+                        this.#unloadRealPdfPage(pageElem)
                     }
                 });
             }, {
@@ -154,13 +188,28 @@
             return pageObserver
         }
 
-
+        #unloadRealPdfPage(pageElem){
+            // console.log(Reflect.ownKeys(pageElem))
+            const pageNo = parseInt(pageElem.id.split('-')[1], 10);
+            const elem = pageElem.querySelector('#elements');
+            if(elem){
+                pageElem.removeChild(elem)
+            }
+            // console.log(canvas)
+            // console.log(pageNo)
+        }
         async #loadRealPdfPage(pageElem) {
             try {
                 const pageNo = parseInt(pageElem.id.split('-')[1], 10);
+                const elem = GeneralFunctions.createElement('elements', 'div')
                 const pdf_canvas = GeneralFunctions.createElement(`canvas-${pageNo}`, 'canvas');
-                pageElem.appendChild(pdf_canvas);
-
+                const pdf_canvas_page_no = GeneralFunctions.createElement(`canvas-page-${pageNo}`, 'div', {backgroundColor:'gray', color:'black', maxWidth:'70px', marginLeft:'auto', marginRight:'auto', textAlign:'center', border:'none', padding:'5px', borderRadius:'10px'});
+                pdf_canvas_page_no.textContent = `Page ${pageNo}`
+                
+                elem.appendChild(pdf_canvas);
+                elem.appendChild(pdf_canvas_page_no);
+                pageElem.appendChild(elem)
+                
                 const page = await this.pdfOBJ.getPage(pageNo);
 
                 // Step 1: get original PDF page size
@@ -203,7 +252,7 @@
                     transform
                 }).promise;
 
-                console.log(`page ${pageNo} Render complete`);
+                // console.log(`page ${pageNo} Render complete`);
             } catch (error) {
                 console.error("Error loading PDF:", error);
             }
@@ -220,11 +269,57 @@
         constructor(name, uri) {
             this.currentEditorFilePath = uri;
             this.currentOpendFileName = name;
+            this.tab_container = '';
+            this.tab = '';
+            this.libraryLoaded = false;
+            this.docOBJ = '';
         }
 
-        handle() {
-            const library = document.createElement('script');
-            library.src = '';
+        async handle() {
+            const container = GeneralFunctions.createMainContainer();
+            // container.style.cssText = 'max-width:100vw;'
+            const tab = GeneralFunctions.CreateNewTab(this.currentOpendFileName, this.currentEditorFilePath, container)
+            const libraryStatus = await GeneralFunctions.addDOCXLibrary()
+            
+            this.libraryLoaded = libraryStatus
+            this.tab = tab;
+            this.tab_container = container;
+            await this.#prepareTab()
+            this.#addStyles()
+        }
+        
+        async #prepareTab(){
+            if (!this.libraryLoaded) { console.log('library not loadde leaving operation'); return}
+            // console.log(this.currentEditorFilePath)
+            const file = await GeneralFunctions.getFileData(this.currentEditorFilePath)
+            const ob = await window.docx.renderAsync(file, this.tab_container, null,{
+                className: "docx",
+                ignoreWidth: false,
+                ignoreHeight: false,
+                inWrapper:true,
+                ignoreFonts:false,
+                breakPages:true,
+                renderHeaders: true,
+                renderFooters:true
+            })
+            this.docOBJ = ob
+        }
+        
+        #addStyles(){
+            // console.log(this.docOBJ)
+            // this.tab_container.onload = console.log('loaded')
+            // this.tab_container.style.cssText = `width:50vh !important; margin-left:70px;`
+            // // const pagesContainer = this.tab_container.querySelector('.docx-wrapper')
+            // pagesContainer.style.cssText=`background-color:red;`
+            
+            const pages = this.tab_container.querySelectorAll('.docx-wrapper')
+            pages.forEach((page)=>{
+                page.style.cssText = `zoom:0.45`
+                
+            })
+            
+            // console.log(this.docOBJ.documentPart.body.cssStyle)
+            
         }
     }
 
@@ -274,7 +369,7 @@
             // get the pdfjs later ill include it directly in project
             acode.registerFileHandler(e.id, {
                 //extensions: ['pdf', 'docx', 'csv', 'xls', 'xlsx', 'md'],
-                extensions: ['pdf'],
+                extensions: ['pdf', 'docx'],
                 async handleFile({ name, uri, fs, options }) {
                     // Handler implementation
                     if (name.toLowerCase().endsWith('pdf')) {
