@@ -40,7 +40,7 @@
         static async getFileData(path) {
             const fsObj = fs(path)
             const fileData = await fsObj.readFile();
-            console.log(typeof(fileData))
+            // console.log(typeof(fileData))
             return fileData
         }
 
@@ -273,10 +273,6 @@
 
     }
 
-
-
-
-
     // handle the ms word files
     class DOCX {
         constructor(name, uri) {
@@ -341,11 +337,92 @@
         constructor(name, uri) {
             this.currentEditorFilePath = uri;
             this.currentOpendFileName = name;
+            this.library_loaded = true 
+            this.tab = null 
+            this.tab_container = null 
+            
         }
 
-        handle() {
-            const library = document.createElement('script');
-            library.src = '';
+        async handle() {
+            this.library_loaded = await GeneralFunctions.addCSVLibrary()
+            this.tab_container = GeneralFunctions.createMainContainer()
+            this.tab_container.style.cssText = 'overflow: auto !important;';
+            this.tab = await GeneralFunctions.CreateNewTab(this.currentOpendFileName, this.currentEditorFilePath, this.tab_container)
+            this.#prepareTab()
+        }
+        
+        async #prepareTab(){
+            const fileData = await GeneralFunctions.getFileData(this.currentEditorFilePath)
+            // console.log(typeof(fileData))
+            // console.log(fileData)
+            
+            const decoder = new TextDecoder('utf-8')
+            const textData = decoder.decode(fileData)
+            // console.log(textData)
+            // const csvText = String(fileData); // force primitive string
+            // console.log(csvText)
+            // const csv = csvText.replace(/^\uFEFF/, "");
+            // console.log(csv)
+            // const { data, errors } = await Papa.parse(textData,{
+            //   header: true,
+            //   delimiter: "",     // ← adjust if needed
+            //   skipEmptyLines: true,
+            //   download: false
+            // });
+
+            // if (errors.length != 0){
+            //     console.error("error gotten ", errors)
+            //     return
+            // }
+            // console.log(data[40])
+            // console.log(textData.split('\n'), typeof(textData))
+            const data = textData.split('\n')
+            
+            
+            
+            
+            const table = GeneralFunctions.createElement('table', 'table', {border: '2px solid white'});
+            this.tab_container.appendChild(table)
+            
+            const headers = [];
+            
+            for (let i=0; i < data.length; i ++){
+                // console.log(this.tab_container)
+                // const p = document.createElement('p');
+                // p.innerHTML = data[i]
+                // this.tab_container.appendChild(p);
+                // console.log(i)
+                const tableRow = GeneralFunctions.createElement(`tr-${i}`, 'tr', {border: '1px solid white;'});
+                if (i == 0){
+                    tableRow.style.cssText = "background-color: gray;"
+                }else if ( i % data.length == 0){
+                    tableRow.style.cssText = "background-color: black;"
+                }else{
+                    tableRow.style.cssText = "background-color:light-green;"
+                }
+                
+                
+                let rowOBJ = data[i].split(',')
+                console.log(rowOBJ, typeof(rowOBJ))
+                
+                for (let j = 0; j < rowOBJ.length; j++){
+                    // console.log('adding td')
+                    const data = rowOBJ[j]
+                    const td = GeneralFunctions.createElement(`td-${j}`, 'td', {border:'1px solid white', padding: '5px'});
+                    td.innerHTML = data
+                    tableRow.appendChild(td)
+                    // console.log(data)
+                }
+                
+                table.appendChild(tableRow);
+                
+                // if(i==20){
+                //     break
+                // }
+            }
+            console.log(table)
+            
+            
         }
     }
 
@@ -453,13 +530,13 @@
             // get the pdfjs later ill include it directly in project
             acode.registerFileHandler(e.id, {
                 //extensions: ['pdf', 'docx', 'csv', 'xls', 'xlsx', 'md'],
-                extensions: ['pdf', 'docx', 'xls', 'xlsx'],
+                extensions: ['pdf', 'docx', 'doc', 'xls', 'xlsx', 'csv'],
                 async handleFile({ name, uri, fs, options }) {
                     // Handler implementation
                     if (name.toLowerCase().endsWith('pdf')) {
                         const pdf = new PDF(name, uri)
                         pdf.handle()
-                    } else if (name.toLowerCase().endsWith('docx')) {
+                    } else if (name.toLowerCase().endsWith('docx') || name.toLowerCase().endsWith('docs')) {
                         const docx = new DOCX(name, uri)
                         docx.handle()
                     } else if (name.toLowerCase().endsWith('csv')) {
@@ -478,6 +555,7 @@
 
         async destroy() { acode.unregisterFileHandler(e.id) }
     }
+
 
     if (window.acode) {
         let i = new documentsHandler();
