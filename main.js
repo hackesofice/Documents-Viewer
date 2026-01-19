@@ -6,7 +6,7 @@
     const EditorFile = acode.require('EditorFile');
     const fs = acode.require('fs')
     var e = {
-        id: "DocumentsViewer",
+        id: "documentsviewer",
     }
 
 
