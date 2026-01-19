@@ -6,7 +6,7 @@
     const EditorFile = acode.require('EditorFile');
     const fs = acode.require('fs')
     var e = {
-        id: "pdfViewer",
+        id: "DocumentsViewer",
     }
 
 
@@ -403,7 +403,7 @@
                 
                 
                 let rowOBJ = data[i].split(',')
-                console.log(rowOBJ, typeof(rowOBJ))
+                // console.log(rowOBJ, typeof(rowOBJ))
                 
                 for (let j = 0; j < rowOBJ.length; j++){
                     // console.log('adding td')
@@ -420,7 +420,7 @@
                 //     break
                 // }
             }
-            console.log(table)
+            // console.log(table)
             
             
         }
@@ -455,7 +455,7 @@
             const fileData = await GeneralFunctions.getFileData(this.currentEditorFilePath);
             
             const workBook = window.XLSX.read(fileData, {type: 'binary'})
-            console.log('this is data')
+            // console.log('this is data')
             const sheet = workBook.Sheets[workBook.SheetNames[0]]
             const html = window.XLSX.utils.sheet_to_html(sheet)
             
