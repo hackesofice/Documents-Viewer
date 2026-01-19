@@ -1,0 +1,36 @@
+name: Zip and Release
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Read version from plugin.json
+        id: version
+        run: |
+          VERSION=$(jq -r '.version' plugin.json)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Create zip archive
+        run: |
+          ZIP_NAME="plugin-${{ steps.version.outputs.version }}.zip"
+          zip -r "$ZIP_NAME" . \
+            -x ".git/*" \
+            -x ".github/*"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.version.outputs.version }}
+          name: v${{ steps.version.outputs.version }}
+          files: |
+            plugin-${{ steps.version.outputs.version }}.zip
