@@ -4,17 +4,18 @@
   "main": "main.js",
   "version": "1.0.0",
   "readme": "readme.md",
-  "icon": "icon.png",
+  "icon": "icon.jpeg",
   "files": [],
   "minVersionCode": 290,
   "license": "",
   "changelogs": "changelogs.md",
-  "keywords": ["offiicialkamal","kamal", "PDF", "pdf viewer"],
+  "keywords": ["PDF", "pdf viewer", "CSV", "CSV VIEWER", "MD", "MD Viewer", "Docs", "Docx", "documents", "documents viewer", "excel", "xlsx", "hackesofice"],
   "price": 0,
-  "repository": "https://github.com/offiicialkamal/PDF-Viewer.git",
+  "repository": "https://github.com/hackesofice/Documents-Viewer.git",
   "author": {
     "name": "HACKESOFICE",
-    "email": "offiicialkamal@gmail.com",
-    "github": "offiicialkamal"
+    "email": "hackesofice@gmail.com",
+    "github": "hackesofice"
   }
 }
+
